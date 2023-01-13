@@ -12,7 +12,7 @@ from ..utils.draw_image_tools.send_image_tool import convert_img
 
 @sv.on_rex(
     r'^(\[CQ:at,qq=[0-9]+\])?( )?'
-    r'(uid|查询|mys)?([0-9]+)?(上期)?(深渊|sy)'
+    r'gs(uid|查询|mys)?([0-9]+)?(上期)?(深渊|sy)'
     r'(9|10|11|12|九|十|十一|十二)?(层)?'
     r'(\[CQ:at,qq=[0-9]+\])?( )?$',
 )
