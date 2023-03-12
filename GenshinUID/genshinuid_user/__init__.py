@@ -1,6 +1,7 @@
 import hoshino
 from hoshino.typing import CQEvent, HoshinoBot
 
+from .topup import topup_
 from ..base import sv, logger
 from .qrlogin import qrcode_login
 from .get_ck_help_msg import get_ck_help
@@ -53,6 +54,17 @@ async def send_bind_card(bot: HoshinoBot, ev: CQEvent):
     await bot.send(ev, im)
 
 
+@sv.on_fullmatch(('扫码登陆', '扫码登录', '扫码登入'))
+async def send_qr_card(bot: HoshinoBot, ev: CQEvent):
+    im = await qrcode_login(hoshino_bot, ev.group_id, ev.user_id)
+    if not im:
+        return
+    im = await deal_ck(im, ev.user_id)  # type: ignore
+    if isinstance(im, bytes):
+        im = await convert_img(im)
+    await bot.send(ev, im)
+
+
 @hoshino_bot.on_message('private')  # type: ignore
 async def send_add_ck_msg(ctx):
     message = ctx['raw_message']
@@ -62,15 +74,6 @@ async def send_add_ck_msg(ctx):
     if message.startswith('添加'):
         message = message.replace('添加', '').replace(' ', '')
         im = await deal_ck(message, userid)  # type: ignore
-    elif (
-        message.startswith('扫码登录')
-        or message.startswith('扫码登陆')
-        or message.startswith('扫码登入')
-    ):
-        im = await qrcode_login(hoshino_bot, userid)
-        if not im:
-            return
-        im = await deal_ck(im, userid)  # type: ignore
     else:
         return
     if isinstance(im, bytes):
@@ -124,3 +127,15 @@ async def send_ck_msg(bot: HoshinoBot, ev: CQEvent):
     await bot.send_group_forward_msg(
         group_id=ev.group_id, messages=forward_msg
     )
+
+
+@sv.on_prefix(("gsrc", "原神充值"))
+async def topup(bot: HoshinoBot, ev: CQEvent):
+    qid = ev.user_id
+    goods_id = ev.message.extract_plain_text()
+    if goods_id == "":
+        goods_id = 0
+    else:
+        goods_id = int(goods_id)
+    group_id = ev.group_id
+    await topup_(bot, qid, group_id, goods_id)
